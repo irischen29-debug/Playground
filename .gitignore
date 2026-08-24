@@ -1,0 +1,7 @@
+# These are independent git repos with their own GitHub remotes — not tracked here
+/CookBook/
+/Finance/
+/onepage-site/
+
+# Local Claude Code settings
+/.claude/
