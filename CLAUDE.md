@@ -7,7 +7,7 @@
 - 動手部署到正式環境前一定要先問我，就算這一步任務本身做得很乾淨也一樣。累積到一定量再部署，不要每做完一個小改動就部署。
 - 部署一律用 Vercel CLI 手動執行（`vercel deploy --prod --yes` / `npx vercel deploy --prod --yes`），不是 push 就自動部署。
 - **部署失敗時先確認登入狀態，它的錯誤訊息會誤導。** CLI 的憑證會過期（npx 拉到新版本後也可能掉），但這時 deploy 回的是 `Not authorized` 或 `You do not have access to the specified account` — 看起來像權限或 scope 的問題，實際上只是登出了。用 `npx vercel whoami` 判斷，回 `Logged out` 就請使用者自己跑 `npx vercel login`（要在瀏覽器完成驗證，代跑不了，而且會寫入 PlayGround 以外的設定目錄）。不要花時間去猜 `--scope`。
-- **但 `whoami` 還回得出帳號時，就不是登出，原樣重試一次。** 2026-09-13 遇過一次：第一次 `deploy` 直接回 `Not authorized`、連上傳進度條都沒出現，可是 `whoami` 正常，而且同一組憑證幾分鐘前才剛成功部署過；原封不動重試就過了。只有一次紀錄，但足以說明 `Not authorized` 不等於登出——先重試，不要急著重新登入或動 scope。
+- **但 `whoami` 還回得出帳號時，就不是登出，原樣重試一次。** 2026-09-13 遇過一次：第一次 `deploy` 直接回 `Not authorized`、連上傳進度條都沒出現，可是 `whoami` 正常，而且同一組憑證幾分鐘前才剛成功部署過；原封不動重試就過了。2026-09-14 又遇到一次，徵兆一模一樣、重試一樣就過；但同一天稍後的部署第一次就成功——所以這是**偶發**，不是「第一次一定失敗」的規律，不要為它養成每次先空跑一趟的習慣。結論：`Not authorized` 不等於登出，遇到就原樣重試，不要急著重新登入或動 scope。判斷依據是「有沒有出現上傳進度條」——失敗的那幾次連傳都還沒開始。
 - **部署完要驗證正式站真的換版了**，不要只信 CLI 回 `"status": "ok"`。比對 `curl` 正式網址拿到的 `assets/index-*.js` / `.css` hash 跟本機 `npm run build` 的輸出是否一致；不一致就是沒生效。
 
 ## Spec-driven development（SDD）
