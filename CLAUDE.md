@@ -9,6 +9,7 @@
 - **部署失敗時先確認登入狀態，它的錯誤訊息會誤導。** CLI 的憑證會過期（npx 拉到新版本後也可能掉），但這時 deploy 回的是 `Not authorized` 或 `You do not have access to the specified account` — 看起來像權限或 scope 的問題，實際上只是登出了。用 `npx vercel whoami` 判斷，回 `Logged out` 就請使用者自己跑 `npx vercel login`（要在瀏覽器完成驗證，代跑不了，而且會寫入 PlayGround 以外的設定目錄）。不要花時間去猜 `--scope`。
 - **但 `whoami` 還回得出帳號時，就不是登出，原樣重試一次。** 2026-09-13 遇過一次：第一次 `deploy` 直接回 `Not authorized`、連上傳進度條都沒出現，可是 `whoami` 正常，而且同一組憑證幾分鐘前才剛成功部署過；原封不動重試就過了。2026-09-14 又遇到一次，徵兆一模一樣、重試一樣就過；但同一天稍後的部署第一次就成功——所以這是**偶發**，不是「第一次一定失敗」的規律，不要為它養成每次先空跑一趟的習慣。結論：`Not authorized` 不等於登出，遇到就原樣重試，不要急著重新登入或動 scope。判斷依據是「有沒有出現上傳進度條」——失敗的那幾次連傳都還沒開始。2026-09-15 那次還多了一條線索：失敗前 `npx` 剛好拉了新版 CLI（`The following package was not found and will be installed: vercel@…`），重試就過。看到那行安裝訊息之後第一次 deploy 失敗，幾乎可以直接當成這個已知狀況處理，重試就好。
 - **部署完要驗證正式站真的換版了**，不要只信 CLI 回 `"status": "ok"`。比對 `curl` 正式網址拿到的 `assets/index-*.js` / `.css` hash 跟本機 `npm run build` 的輸出是否一致；不一致就是沒生效。
+- 需要改資料庫（migration）時不用停下來等我，寫好就繼續實作。migration 由我自己到 Supabase 後台執行；在需要它的驗收與部署之前提醒我先跑，並確認生效後才部署 —— 程式先上線、欄位還沒加，存檔會直接壞掉。
 
 ## Spec-driven development（SDD）
 
