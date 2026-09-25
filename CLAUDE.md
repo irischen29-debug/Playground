@@ -15,6 +15,7 @@
 
 - 專案使用 `simple-sdd` skill：提案 → 實作 → 歸檔。
 - 工作項目放在 `sdd/<短名稱>/`（`proposal.md` + `tasks.md`），驗收通過後歸檔到 `sdd/archive/<日期>-<短名稱>/`。
+- 設計 prototype 也放在提案資料夾裡（`sdd/<短名稱>/prototype.html`），跟著提案一起歸檔，不要放專案根目錄。
 - 開新提案前，先檢查 `sdd/archive/`（以及目前還沒歸檔的 `sdd/` 資料夾）有沒有相關的既有工作，避免重複開新的。
 
 ## 測試習慣
