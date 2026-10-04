@@ -22,6 +22,10 @@
 
 - 驗證改動時，優先實際操作真實的 app（瀏覽器 / Playwright），不要只信任 build 或 type-check 通過。過去有幾個真實的 bug 只有實際操作才抓得到。對正式環境的後端測試完要記得清掉測試資料。
 
+## Git：每個子專案都是獨立的 repo
+
+`Finance/`、`CookBook/`、`Arc/`、`onepage-site/`、`TripGo/` 各自有自己的 `.git` 和 GitHub remote，上層 PlayGround 的 `.gitignore` 把它們排除在外。**pull / commit / push 一律先 `cd` 進該子專案再下**，在 PlayGround 根目錄下 `git pull` 只會更新上層這份共用文件，不會動到任何子專案（2026-10-04 就因此漏掉 Finance 遠端的一個 commit，歸檔時才發現、補合併）。部署前也先在子專案裡 `git fetch` 看有沒有落後，避免用過時的程式碼蓋掉正式站。
+
 ## 專案共同型態
 
 這裡的專案大多是同一種形狀：React + Vite 前端、Supabase（Postgres + Auth + RLS）後端、部署在 Vercel，單一使用者的個人工具，email/password 登入，mobile-first PWA。
