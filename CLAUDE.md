@@ -26,9 +26,16 @@
 
 `Finance/`、`CookBook/`、`Arc/`、`onepage-site/`、`TripGo/` 各自有自己的 `.git` 和 GitHub remote，上層 PlayGround 的 `.gitignore` 把它們排除在外。**pull / commit / push 一律先 `cd` 進該子專案再下**，在 PlayGround 根目錄下 `git pull` 只會更新上層這份共用文件，不會動到任何子專案（2026-10-04 就因此漏掉 Finance 遠端的一個 commit，歸檔時才發現、補合併）。部署前也先在子專案裡 `git fetch` 看有沒有落後，避免用過時的程式碼蓋掉正式站。
 
+## Windows PowerShell 的坑（這台是 PowerShell 5.1）
+
+- **commit 訊息不要用 here-string 直接傳給 `git commit -m`**：訊息裡有雙引號時，PowerShell 5.1 傳給原生程式會把引號拆開，git 把後半段當成檔名（`pathspec 'xxx' did not match`），整個 commit 沒成功。也不要用 `Out-File -Encoding utf8` 寫訊息檔 —— 5.1 會加 BOM，commit 標題開頭多一個看不見的字元（Arc `689f559` 就是）。做法：`[System.IO.File]::WriteAllText($path, $text, (New-Object System.Text.UTF8Encoding $false))` 寫到 scratchpad，再 `git commit -F $path`。
+- **用 `.Replace()` 改檔案時注意換行**：有的檔是 CRLF，搜尋字串裡寫 `` `n `` 會對不到、不報錯也不替換。改程式碼優先用編輯工具；真的要用 PowerShell 改，改完看一下 `git diff --stat` 只動到預期的行。
+
 ## 專案共同型態
 
 這裡的專案大多是同一種形狀：React + Vite 前端、Supabase（Postgres + Auth + RLS）後端、部署在 Vercel，單一使用者的個人工具，email/password 登入，mobile-first PWA。
+
+- **Supabase 一次最多回 1000 筆，超過會悄悄截掉、不報錯。** 那是專案 API 設定的「Max Rows」（預設 1000），client 寫 `.limit(5000)` 蓋不過它。讀「全部歷史」的查詢（算紀錄、累計、讀每一筆子表）資料一多就會少算最舊的、而且看不出來。Arc 2026-10-15 發現：讀每一組 `set_logs` 的查詢可能早就超過了。做法見 `Arc/src/lib/fetchAll.ts`：先帶 `count: 'exact'` 問總數，照固定順序（日期＋id）用 `.range()` 一批一批讀到筆數對上；讀全部時也只 `select` 需要的欄位。
 
 ## 協作習慣
 
@@ -41,5 +48,5 @@
 - **同一類的小修改累積起來一起部署**，不要每改一行就 build + 部署 + 驗證一輪。
 - **實測是我的步驟。** 這台（或任何一台）電腦上沒有 Supabase 的登入帳密，登入之後的畫面你測不到，build 和獨立的邏輯測試就是上限。流程是：部署 → 給我一份照順序點的清單（風險最高的放前面），說清楚哪些只過了型別檢查 → 我在 iPhone 上測。不要為了驗收開本機 dev server —— 手機才是真正的測試環境。我回「驗收」或「歸檔」就代表測過了。
 - **給我的正式網址一律用短網域**（`npx vercel project ls` 的「Latest Production URL」），不要用 `…-projects.vercel.app` 這種團隊別名。Deployment Protection 保持開著 —— 關掉的話舊部署網址全部變公開，曾經讓我把舊版加到主畫面。
-- **prototype 做好就直接在電腦瀏覽器打開**（PowerShell `Start-Process <檔案>`），不要只給路徑。要我選樣式時，把現在的樣子和 A／B 幾種做法並排在同一頁對照；我回一個字母就照那個做，看不出指哪一個時先講一句你的理解再動手。
+- **prototype 做好就直接在電腦瀏覽器打開**（PowerShell `Start-Process <檔案>`），不要只給路徑。我說打不開時（2026-10-15 遇過：使用者資料夾名稱是中文、檔案在 OneDrive），改成指定瀏覽器開 file URI：`Start-Process msedge ([System.Uri]$path).AbsoluteUri`，並把那串 `file:///…` 也貼給我。要我選樣式時，把現在的樣子和 A／B 幾種做法並排在同一頁對照；我回一個字母就照那個做，看不出指哪一個時先講一句你的理解再動手。
 - **「做完部署」只授權那一件事**。之後的新改動照樣先問，除非我又說了。
