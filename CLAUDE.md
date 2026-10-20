@@ -35,6 +35,7 @@
 
 這裡的專案大多是同一種形狀：React + Vite 前端、Supabase（Postgres + Auth + RLS）後端、部署在 Vercel，單一使用者的個人工具，email/password 登入，mobile-first PWA。
 
+- **2026-10-30 起，`public` 新建的表要自己寫 GRANT。** Supabase 不再自動把 `public` 的新表開放給 Data API（supabase-js／PostgREST），沒授權會回「permission denied」；現有的表不受影響。各專案現況：Arc（`workout`，每張表自己 grant）、CookBook（`cookbook`）、TripGo（`tripgo`，這兩個有 `alter default privileges`）都不在 `public`、不受影響；**Finance 的表在 `public`**，新加表要在 `Finance/supabase/schema.sql` 結尾那段補 `grant ... to authenticated`。新專案也一樣：建表、開 RLS、寫 policy、再 grant。
 - **Supabase 一次最多回 1000 筆，超過會悄悄截掉、不報錯。** 那是專案 API 設定的「Max Rows」（預設 1000），client 寫 `.limit(5000)` 蓋不過它。讀「全部歷史」的查詢（算紀錄、累計、讀每一筆子表）資料一多就會少算最舊的、而且看不出來。Arc 2026-10-15 發現：讀每一組 `set_logs` 的查詢可能早就超過了。做法見 `Arc/src/lib/fetchAll.ts`：先帶 `count: 'exact'` 問總數，照固定順序（日期＋id）用 `.range()` 一批一批讀到筆數對上；讀全部時也只 `select` 需要的欄位。
 
 ## 協作習慣
